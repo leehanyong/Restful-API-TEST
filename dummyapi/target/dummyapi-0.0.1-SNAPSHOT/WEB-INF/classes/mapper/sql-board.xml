@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="dummyapi.board.mapper.BoardMapper">
+	
+	<select id="selectExportContractList" parameterType="java.util.Map" resultType="dummyapi.board.dto.exportcontract.ExportContractDto">
+			SELECT
+			    @ROWNUM:=@ROWNUM+1 AS RNUM
+				, contractIdx
+				, exportType
+				, documentNumber
+				, contractAmount
+				, currencyCode
+				, DATE_FORMAT(contractDateTime, '%Y.%m.%d %H:%i:%s') AS contractDateTime
+				, priceTerms
+				, DATE_FORMAT(shipmentDueDateTime, '%Y.%m.%d %H:%i:%s') AS shipmentDueDateTime
+				, negoAmount
+				, balanceAmount
+				, exporterName
+				, exporterSsn
+				, exporterAddress
+				, importerName
+				, importerCountryCode
+				, importerAddress
+				, shipmentCountryCode
+				, shipmentPortCode
+				, shipmentPortName
+				, transShipmentCountryCode
+				, transShipmentPortCode
+				, transShipmentPortName
+				, destinationCountryCode
+				, destinationPortCode
+				, destinationPortName
+				, DATE_FORMAT(regDate, '%Y.%m.%d %H:%i:%s') AS regDate
+ 			FROM
+				export_contract A, (SELECT @ROWNUM:=#{from_cnt}) R
+			WHERE 1=1 
+			<if test="documentNumber != ''">
+				AND documentNumber = #{documentNumber}
+			</if>
+			<if test="exportType != ''">
+				AND exportType = #{exportType}
+			</if>
+			<if test="startDateTime != ''">
+				AND regDate between #{startDateTime} and #{endDateTime}
+			</if>
+			ORDER BY regDate DESC
+			<if test="to_cnt != 0">
+				limit #{from_cnt}, #{to_cnt}
+			</if>
+	</select>
+	
+	<select id="selectExportContractListCnt" parameterType="java.util.Map" resultType="java.lang.Integer">
+			SELECT
+			    COUNT(*)
+ 			FROM
+				export_contract
+			WHERE 1=1 
+			<if test="documentNumber != ''">
+				AND documentNumber = #{documentNumber}
+			</if>
+			<if test="exportType != ''">
+				AND exportType = #{exportType}
+			</if>
+			<if test="startDateTime != ''">
+				AND regDate between #{startDateTime} and #{endDateTime}
+			</if>			
+	</select>
+	
+	<select id="selectExportContractDetail" parameterType="int" resultType="dummyapi.board.dto.exportcontract.ExportContractDto">
+			SELECT
+			      contractIdx
+				, exportType
+				, documentNumber
+				, contractAmount
+				, currencyCode
+				, DATE_FORMAT(contractDateTime, '%Y.%m.%d %H:%i:%s') AS contractDateTime
+				, priceTerms
+				, DATE_FORMAT(shipmentDueDateTime, '%Y.%m.%d %H:%i:%s') AS shipmentDueDateTime
+				, negoAmount
+				, balanceAmount
+				, exporterName
+				, exporterSsn
+				, exporterAddress
+				, importerName
+				, importerCountryCode
+				, importerAddress
+				, shipmentCountryCode
+				, shipmentPortCode
+				, shipmentPortName
+				, transShipmentCountryCode
+				, transShipmentPortCode
+				, transShipmentPortName
+				, destinationCountryCode
+				, destinationPortCode
+				, destinationPortName
+				, DATE_FORMAT(regDate, '%Y.%m.%d %H:%i:%s') AS regDate
+ 			FROM export_contract
+			WHERE contractIdx = #{value}
+	</select>
+	
+	<select id="selectExportContractHistoryList" parameterType="int" resultType="dummyapi.board.dto.exportcontract.ExportContractHistoryDto">
+			SELECT
+			      contractIdx
+				, transactionId
+				, committer
+				, status 
+				, DATE_FORMAT(updateDateTime, '%Y.%m.%d %H:%i:%s') AS updateDateTime
+ 			FROM export_history
+			WHERE contractIdx = #{value}
+	</select>
+	
+	<select id="selectExportContractFileList" parameterType="int" resultType="dummyapi.board.dto.BoardFileDto">
+		<![CDATA[
+			SELECT
+				  file_idx
+				, original_file_name
+				, FORMAT(ROUND(file_size / 1024), 0) AS file_size
+			FROM t_file
+			WHERE fileObjectIdentifier = #{value}
+			AND deleted_yn = 'N'
+		]]>
+	</select>
+	
+	
+	<select id="getfileIdx" resultType="int">
+		<![CDATA[
+			SELECT IFNULL(MAX(fileObjectIdentifier), 0)
+			FROM t_file
+		]]>
+	</select>
+	
+	<select id="getfileObjectIdentifier" parameterType="int" resultType="int">
+		<![CDATA[
+			SELECT
+				fileObjectIdentifier
+			FROM export_contract
+			WHERE fileObjectIdentifier = #{value}
+		]]>
+	</select>
+	
+	
+	<select id="selectExportFileInfo" parameterType="map" resultType="dummyapi.board.dto.BoardFileDto">
+		<![CDATA[
+			SELECT
+				original_file_name,
+				stored_file_path,
+				file_size
+			FROM
+				t_file
+			WHERE
+				file_idx = #{fileIdx}
+				AND deleted_yn = 'N'
+		]]>
+	</select>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	<insert id="insertBoard" parameterType="dummyapi.board.dto.BoardDto" useGeneratedKeys="true" keyProperty="boardIdx">
+		<![CDATA[
+			INSERT INTO t_board
+			(
+				title, 
+				contents, 
+				created_datetime, 
+				creator_id
+			) 
+			VALUES 
+			(
+				#{title}, 
+				#{contents}, 
+				NOW(), 
+				'admin'			
+			)
+		]]>
+	</insert>
+	
+	<update id="updateHitCount" parameterType="int">
+		<![CDATA[
+			UPDATE 
+				t_board 
+			SET 
+				hit_cnt = hit_cnt + 1 
+			WHERE 
+				board_idx = #{boardIdx}
+		]]>
+	</update>
+	
+	<update id="updateBoard" parameterType="dummyapi.board.dto.BoardDto">
+		<![CDATA[
+			UPDATE t_board SET 
+				title = #{title},
+				contents = #{contents},
+				updated_datetime = Now(),
+				updater_id = 'admin'
+			WHERE 
+				board_idx = #{boardIdx}
+		]]>
+	</update>
+	
+	<update id="deleteBoard" parameterType="int">
+		<![CDATA[
+			UPDATE t_board SET 
+				deleted_yn = 'Y',
+				updated_datetime = Now(),
+				updater_id = 'admin'
+			WHERE 
+				board_idx = #{boardIdx}
+		]]>
+	</update>
+	
+	<insert id="uploadFileList" parameterType="dummyapi.board.dto.BoardFileDto">
+		<![CDATA[
+			INSERT INTO t_file
+			(
+				fileObjectIdentifier,
+				original_file_name,
+				stored_file_path,
+				file_size,
+				creator_id,
+				created_datetime
+			)
+			VALUES
+		]]>
+		<foreach collection="list" item="item" separator=",">
+			(
+				#{item.fileObjectIdentifier},
+				#{item.originalFileName},
+				#{item.storedFilePath},
+				#{item.fileSize},
+				'admin',
+				NOW()
+			)
+		</foreach>
+	</insert>
+	
+	
+	
+	
+	<insert id="insertBoardtest" parameterType="java.lang.String" useGeneratedKeys="true">
+		<![CDATA[
+			insert into export_contract (exportType, documentNumber, contractAmount, currencyCode, contractDateTime, priceTerms, shipmentDueDateTime, negoAmount, balanceAmount, exporterName, exporterSsn, exporterAddress, importerName, importerCountryCode, importerAddress, shipmentCountryCode, shipmentPortCode, shipmentPortName, transShipmentCountryCode, transShipmentPortCode, transShipmentPortName, destinationCountryCode, destinationPortCode, destinationPortName, regDate) 
+			values ('EXP02', #{value}, 12800, 'DFG', now(), 'priceTerms', now(), 18000, 24000, '수출자 상호', '수출자 사업자번호', '수출자 주소', '수입자 상호', '수입자 국가코드,', '수입자 주소', '선적지 국가코드', '선적지 항만코드', '선적지 이름', '환적지 국가코드', '환적지 항만코드', '환적지 이름', '도착지 국가코드', '도착지 항만코드', '도착지 이름', now());
+		]]>
+	</insert>
+	
+</mapper>
